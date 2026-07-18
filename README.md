@@ -112,3 +112,34 @@ docker compose -f docker-compose.prod.yml run --rm app python manage.py migrate
 docker compose -f docker-compose.prod.yml run --rm app python manage.py createsuperuser
 ```
 
+## El peligro del "Dueño" en la carpeta compartida (`/var/www/staticfiles`)
+
+Este es el verdadero problema oculto. En tu `docker-compose.prod.yml` pusiste este mapeo: `- /var/www/staticfiles:/app/staticfiles`
+
+¿Qué pasa tras bambalinas?
+
+1. Durante el `build`, el `Dockerfile.prod` ejecuta `collectstatic` como usuario `root` dentro de la imagen.
+
+2. Al levantar el contenedor, Docker mapea esa carpeta al disco real del servidor base.
+
+3. Si la carpeta `/var/www/staticfiles` en el servidor real no existe, **Docker la va a crear automáticamente**, pero la creará con el dueño `root:root`.
+
+**El problema:** Si más adelante tu proxy reverso (Nginx o Apache) corre en el servidor real bajo su propio usuario estándar (como `www-data` o `nginx`), cuando intente leer los archivos CSS dentro de `/var/www/staticfiles` para mostrárselos al público, dará un error **403 Forbidden** porque `root` bloquea el acceso.
+
+- **La solución en el servidor real:** Antes de darle el primer `run-prod.sh`, el SysAdmin (o tú) debe asegurarse de que la carpeta exista y que el usuario del servidor web pueda leerla. Normalmente se soluciona ejecutando esto **una sola vez en el servidor real**:
+
+Bash
+
+```bash
+# 1. Crear la carpeta a mano en el servidor real si no existe
+sudo mkdir -p /var/www/staticfiles
+
+# 2. Darle la propiedad al usuario del servidor web (ejemplo habitual: www-data)
+sudo chown -R www-data:www-data /var/www/staticfiles
+
+# 3. Asegurar permisos de lectura (755) para que todos puedan leer los CSS/JS
+sudo chmod -R 755 /var/www/staticfiles
+```
+
+### 
+
