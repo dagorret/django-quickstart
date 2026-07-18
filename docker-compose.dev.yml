@@ -1,52 +1,65 @@
 services:
-  # Base de Datos Postgres
+  # Base de Datos (Desarrollo)
   db:
     image: postgres:15-alpine
     container_name: dapp_db_dev
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
     environment:
       - POSTGRES_DB=dapp
       - POSTGRES_USER=dapp
-      - POSTGRES_PASSWORD=dapp_password # Cambia esta contraseña en producción
-    ports:
-      - "5432:5432"
+      - POSTGRES_PASSWORD=dapp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Aplicación Django (La Fábrica Editorial)
+  # Aplicación Django (Desarrollo con volumen vivo)
   app:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: dapp_app_dev
+    restart: unless-stopped
+    # El servidor nativo de Django con autorecarga activa
     command: python manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/app
     ports:
       - "8000:8000"
+    volumes:
+      - .:/app  # Mapeo vivo para que los cambios en tu código se vean al instante
     depends_on:
       - db
     environment:
-      # URL de conexión actualizada con el nuevo usuario y bd: dapp
-      - DATABASE_URL=postgres://dapp:faroed_password@db:5432/dapp
-      - EMAIL_HOST=webmail
-      - EMAIL_PORT=1025
+      - DATABASE_URL=postgres://dapp:dapp@db:5432/dapp
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  # Administrador de Base de Datos
-  webdb:
-    image: adminer:alpine
-    container_name: dapp_webdb_dev
+  # Gestor de Base de Datos (Visual)
+  adminer:
+    image: adminer:latest  # Tag oficial y ultra-estable
+    container_name: dapp_adminer_dev
+    restart: unless-stopped
     ports:
       - "8080:8080"
     depends_on:
       - db
 
-  # Atrapa-correos local
-  webmail:
+  # Servidor de Correo Falso (Captura emails locales)
+  mailpit:
     image: axllent/mailpit:latest
-    container_name: dapp_webmail_dev
+    container_name: dapp_mailpit_dev
+    restart: unless-stopped
     ports:
-      - "8025:8025"
-      - "1025:1025"
+      - "8025:8025"  # Interfaz Web para ver los correos enviados por Django
 
 volumes:
   postgres_data_dev:
