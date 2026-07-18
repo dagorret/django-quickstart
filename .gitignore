@@ -1,0 +1,16 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Databases
+db.sqlite3
+
+# Docker local data (por si las dudas)
+.database_data/
+postgres_data_prod/
+
+# OS files
+.DS_Store
+Thumbs.db
