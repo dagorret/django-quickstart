@@ -1,0 +1,44 @@
+services:
+  # Base de Datos Postgres (Producción)
+  db:
+    image: postgres:15-alpine
+    container_name: dapp_db_prod
+    restart: always
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=dapp
+      - POSTGRES_USER=dapp
+      - POSTGRES_PASSWORD=CAMBIAR_ESTA_CONTRASENA_EN_PRODUCCION
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Aplicación Django (Contenedor Sellado con Inmutabilidad)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.prod
+    container_name: dapp_app_prod
+    restart: always
+    command: uwsgi --master --die-on-term --processes=4 --threads=2 --http=0.0.0.0:8000 --module=backend.wsgi
+    ports:
+      - "8000:8000"
+    volumes:
+      - /var/www/staticfiles:/app/staticfiles
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgres://dapp:CAMBIAR_ESTA_CONTRASENA_EN_PRODUCCION@db:5432/dapp
+      - DEBUG=False
+      - ALLOWED_HOSTS=tudominio.com,www.tudominio.com
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  postgres_data_prod:
