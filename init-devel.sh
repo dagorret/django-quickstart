@@ -1,5 +1,7 @@
 #!/bin/bash
-#Este es el corazón de tu Quickstart. Se ejecuta una sola vez para crear la estructura de Django en tu carpeta local y correr las migraciones iniciales en Postgres.
+# Este es el corazón de tu Quickstart. 
+# Se ejecuta una sola vez para crear la estructura de Django 
+# en tu carpeta local y correr las migraciones iniciales en Postgres.
 set -e
 
 echo "🚀 Inicializando el andamiaje de Django (backend)..."
