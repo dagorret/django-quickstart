@@ -168,3 +168,38 @@ Bash
 ```
 docker compose -f docker-compose.prod.yml logs -f app
 ```
+
+#### 1. Las credenciales viejas quedaron en el volumen 😈
+
+Si antes de que pusiéramos `dapp/dapp` en el `docker-compose.dev.yml` habías levantado el contenedor con **otras credenciales** (o vacío con los valores por defecto de Postgres), la base de datos ya se inicializó con la contraseña vieja. Cambiar el `.yml` no actualiza la contraseña de un volumen que ya existe.
+
+**La solución rápida (Borrón y cuenta nueva local):** Como estás en desarrollo y quieres que tome las credenciales definitivas del script, vamos a destruir el volumen de datos local y recrearlo en limpio:
+
+Bash
+
+```
+# 1. Apaga el entorno y destruye el volumen viejo
+docker compose -f docker-compose.dev.yml down -v
+
+# 2. Vuelve a levantar (esto creará la base de datos de cero con user y pass "dapp")
+./run-devel.sh
+```
+
+### 2. El orden de los factores en Adminer
+
+A veces, al cambiar el desplegable de *MySQL* a *PostgreSQL* en la pantalla de Adminer, el navegador te vuelve a autocompletar los campos con datos guardados viejos.
+
+Asegúrate de que quede exactamente así antes de dar clic:
+
+- **Motor:** `PostgreSQL`
+
+- **Servidor:** `db`
+
+- **Usuario:** `dapp`
+
+- **Contraseña:** `dapp`
+
+- **Base de datos:** `dapp`
+
+🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖🤖
+
