@@ -141,5 +141,30 @@ sudo chown -R www-data:www-data /var/www/staticfiles
 sudo chmod -R 755 /var/www/staticfiles
 ```
 
-### 
+## 🔑 Comandos Administrativos Manuales en Producción
 
+Estos comandos **no se incluyen en scripts automáticos** ya que requieren interacción de consola o se ejecutan una única vez al montar el servidor real por primera vez:
+
+- **Aplicar las tablas iniciales con el contenedor aún apagado:**
+
+Bash
+
+```
+docker compose -f docker-compose.prod.yml run --rm app python manage.py migrate
+```
+
+- **Crear la cuenta del Administrador / Dueño de la plataforma en producción:**
+
+Bash
+
+```
+docker compose -f docker-compose.prod.yml run --rm app python manage.py createsuperuser
+```
+
+- **Ver los logs en tiempo real para diagnosticar errores en producción:**
+
+Bash
+
+```
+docker compose -f docker-compose.prod.yml logs -f app
+```
