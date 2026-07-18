@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Base de Datos Postgres
+  db:
+    image: postgres:15-alpine
+    container_name: dapp_db_dev
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=dapp
+      - POSTGRES_USER=dapp
+      - POSTGRES_PASSWORD=dapp_password # Cambia esta contraseña en producción
+    ports:
+      - "5432:5432"
+
+  # Aplicación Django (La Fábrica Editorial)
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: dapp_app_dev
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      # URL de conexión actualizada con el nuevo usuario y bd: dapp
+      - DATABASE_URL=postgres://dapp:faroed_password@db:5432/dapp
+      - EMAIL_HOST=webmail
+      - EMAIL_PORT=1025
+
+  # Administrador de Base de Datos
+  webdb:
+    image: adminer:alpine
+    container_name: dapp_webdb_dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+  # Atrapa-correos local
+  webmail:
+    image: axllent/mailpit:latest
+    container_name: dapp_webmail_dev
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+
+volumes:
+  postgres_data_dev:
