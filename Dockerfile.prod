@@ -1,0 +1,18 @@
+FROM python:3.11-alpine
+
+# Añadimos linux-headers, necesario para que uWSGI pueda compilar en Alpine
+RUN apk add --no-cache gcc musl-dev postgresql-dev libffi-dev linux-headers
+
+WORKDIR /app
+
+RUN python -m pip install --upgrade pip
+
+COPY requirements.txt .
+RUN python -m pip install --no-cache-dir -r requirements.txt
+
+# 1. Copiamos todo el código del proyecto dentro de la imagen
+COPY . .
+
+# 2. Le decimos a Django que recolecte los estáticos en /app/staticfiles
+# (Asegúrate de tener STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') en tu settings.py)
+RUN python manage.py collectstatic --noinput
